@@ -1,35 +1,38 @@
 import requests
-from operator import itemgetter
 
-url = "https://hacker-news.firebaseio.com/v0/topstories.json"
-r = requests.get(url)
-print(f"Status code: {r.status_code}")
 
-# process information about each submission
+base_url = "https://api.weather.gov/"
 
-submission_ids = r.json()
-submission_dicts = []
-for submission_id in submission_ids[:30]:
-    # Make separate API call for each submission
-    url = f"https://hacker-news.firebaseio.com/v0/item/{submission_id}.json"
-    r = requests.get(url)
-    print(f"id: {submission_id}/tstatus: {r.status_code}")
-    response_dict = r.json()
+class Client:
+    def __init__(self, base_url):
+        self.base_url = base_url
+
+    def get_response(self):
+        response = requests.get(base_url, verify=False)
+        print(f'Status Code:{response.status_code}')
     
-    # build dictionary for each article
-    submission_dict = {
-        "title": response_dict.get("title", "No title"),
-        "hn_link": f"https://news.ycombinator.com/item?id={submission_id}",
-        "comments": response_dict.get("descendants", 0),
-    }
-    submission_dicts.append(submission_dict)
-    
-submission_dicts = sorted(submission_dicts, key= itemgetter("comments"), reverse=True)
+    def get_gridpoint_forecast(self, wfo, x, y):
+        endpoint = "/gridpoints/{wfo}/{x},{y}"
+        gridpoint_url = self.base_url + endpoint
+        response = requests.get(gridpoint_url, verify=False)
+        if response.status_code == 200:
+            print(f'Gridpoint Forecast: {response.json()}')
+        
+    # def fetch_office_info(self, office_id):
+    #     endpoint = "/offices/{office_id}"
+    #     office_url = self.base_url + endpoint
+    #     response = requests.get(office_url, verify=False)
+    #     if response.status_code == 200:
+    #         print(f'Office Info: {response.json()}')
+    #     else:
+    #         print(f"Error fetching office info: {response.status_code}")
+    #         return None
+       
 
-for submission_dict in submission_dicts:
-    print(f"\nTitle: {submission_dict['title']}")
-    print(f"Discussion link: {submission_dict['hn_link']}")
-    print(f"Comments: {submission_dict['comments']}")
+call_api = Client(base_url)        
+call_api.get_response()
+call_api.get_gridpoint_forecast("AKQ", 200, 172)
+# call_api.fetch_office_info("ALY")
     
     
     
